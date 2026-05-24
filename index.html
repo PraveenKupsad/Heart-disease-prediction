@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heart Disease Prediction - XGBoost Dashboard</title>
+  <meta name="description" content="A premium medical prediction dashboard using an XGBoost machine learning model trained on the UCI Cleveland dataset to predict cardiovascular disease risk.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN for interactive charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <!-- Heart Icon SVG -->
+          <svg viewBox="0 0 24 24">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="brand-title-group">
+          <span class="brand-subtitle">AI Diagnostic System</span>
+          <div class="brand-title">
+            <h1>Heart Disease Prediction</h1>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" id="tab-calc" role="tab" aria-selected="true" aria-controls="panel-calc">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display:inline-block; vertical-align:middle;">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/>
+          </svg>
+          Risk Calculator
+        </button>
+        <button class="tab-btn" id="tab-explorer" role="tab" aria-selected="false" aria-controls="panel-explorer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display:inline-block; vertical-align:middle;">
+            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+          </svg>
+          Clinical Data Explorer
+        </button>
+        <button class="tab-btn" id="tab-tech" role="tab" aria-selected="false" aria-controls="panel-tech">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="display:inline-block; vertical-align:middle;">
+            <path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/>
+          </svg>
+          Model & Pipeline
+        </button>
+      </nav>
+    </header>
+
+    <!-- Main Content Panels -->
+    <main>
+      
+      <!-- Panel 1: Risk Calculator -->
+      <section class="tab-content active grid-calculator" id="panel-calc" role="tabpanel" aria-labelledby="tab-calc">
+        
+        <!-- Left Column: Feature Inputs -->
+        <div class="glass-card">
+          <h2 class="card-title">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+            Patient Clinical Profile
+          </h2>
+          <p class="card-desc">Adjust the patient's biological metrics and clinical observations below to run the prediction model.</p>
+          
+          <div class="features-container">
+            
+            <!-- Age Slider -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Patient Age</span>
+                <span class="feature-value" id="val-age">45 years</span>
+              </div>
+              <input type="range" class="range-slider" id="input-age" min="20" max="85" value="45">
+            </div>
+
+            <!-- Sex Selector -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Gender</span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="sex" value="0" id="sex-female">
+                  <span class="chip-label">Female</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="sex" value="1" id="sex-male" checked>
+                  <span class="chip-label">Male</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Chest Pain Type Selector -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  Chest Pain Type
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">Chest pain categories range from typical cardiac-related angina (squeezing, pressure) to asymptomatic.</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="cp" value="1" id="cp-typical">
+                  <span class="chip-label">Typical Angina</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="cp" value="2" id="cp-atypical">
+                  <span class="chip-label">Atypical Angina</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="cp" value="3" id="cp-nonanginal">
+                  <span class="chip-label">Non-Anginal</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="cp" value="4" id="cp-asymptomatic" checked>
+                  <span class="chip-label">Asymptomatic</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Resting Blood Pressure Slider -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Resting Blood Pressure</span>
+                <span class="feature-value" id="val-trestbps">120 mmHg</span>
+              </div>
+              <input type="range" class="range-slider" id="input-trestbps" min="80" max="200" value="120">
+            </div>
+
+            <!-- Serum Cholesterol Slider -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Serum Cholesterol</span>
+                <span class="feature-value" id="val-chol">210 mg/dL</span>
+              </div>
+              <input type="range" class="range-slider" id="input-chol" min="100" max="450" value="210">
+            </div>
+
+            <!-- Fasting Blood Sugar Toggle -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  Fasting Blood Sugar
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">Measures if blood sugar concentration after fasting is above or below 120 mg/dL. Elevated sugar increases cardiovascular risk.</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="fbs" value="0" id="fbs-normal" checked>
+                  <span class="chip-label">&le; 120 mg/dL</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="fbs" value="1" id="fbs-high">
+                  <span class="chip-label">&gt; 120 mg/dL</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Resting ECG Toggle -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Resting Electrocardiogram</span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="restecg" value="0" id="ecg-normal" checked>
+                  <span class="chip-label">Normal</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="restecg" value="1" id="ecg-stt">
+                  <span class="chip-label">ST-T Wave Abn.</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="restecg" value="2" id="ecg-lvh">
+                  <span class="chip-label">LV Hypertrophy</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Maximum Heart Rate Achieved Slider -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">Max Heart Rate Achieved</span>
+                <span class="feature-value" id="val-thalach">150 bpm</span>
+              </div>
+              <input type="range" class="range-slider" id="input-thalach" min="60" max="220" value="150">
+            </div>
+
+            <!-- Exercise Induced Angina Toggle -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  Exercise Induced Angina
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">Angina chest discomfort brought on specifically by physical exertion (treadmill exercise test).</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="exang" value="0" id="exang-no" checked>
+                  <span class="chip-label">No</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="exang" value="1" id="exang-yes">
+                  <span class="chip-label">Yes</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- ST Depression Slider -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  ST Depression (Oldpeak)
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">ST depression induced by exercise relative to rest. Reflects a lack of oxygenated blood reaching the heart muscle.</span>
+                  </span>
+                </span>
+                <span class="feature-value" id="val-oldpeak">0.0 mm</span>
+              </div>
+              <input type="range" class="range-slider" id="input-oldpeak" min="0" max="6.2" step="0.1" value="0">
+            </div>
+
+            <!-- Slope Selector -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  ST Segment Slope
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">The shape/slope of the ST segment during peak exercise. An upsloping shape is normal, flat or downsloping indicates coronary issues.</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="slope" value="1" id="slope-upsloping" checked>
+                  <span class="chip-label">Upsloping</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="slope" value="2" id="slope-flat">
+                  <span class="chip-label">Flat</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="slope" value="3" id="slope-downsloping">
+                  <span class="chip-label">Downsloping</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- ca Selector -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  Vessels Colored (Fluoroscopy)
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">Number of major coronary blood vessels colored by dye during fluoroscopy. 0 is normal; 1-3 indicate narrowing and blockages.</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="ca" value="0" id="ca-0" checked>
+                  <span class="chip-label">0</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="ca" value="1" id="ca-1">
+                  <span class="chip-label">1</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="ca" value="2" id="ca-2">
+                  <span class="chip-label">2</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="ca" value="3" id="ca-3">
+                  <span class="chip-label">3</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- thal Selector -->
+            <div class="feature-group">
+              <div class="feature-label-container">
+                <span class="feature-label">
+                  Thalassemia Blood Test
+                  <span class="tooltip-trigger">
+                    <svg class="feature-info-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="tooltip">Thalassemia is a genetic blood disorder. Testing identifies: Normal flow, a Fixed/permanent defect, or a Reversible/exertion-only flow defect.</span>
+                  </span>
+                </span>
+              </div>
+              <div class="chip-grid">
+                <label class="chip-option">
+                  <input type="radio" name="thal" value="3" id="thal-normal" checked>
+                  <span class="chip-label">Normal</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="thal" value="6" id="thal-fixed">
+                  <span class="chip-label">Fixed Defect</span>
+                </label>
+                <label class="chip-option">
+                  <input type="radio" name="thal" value="7" id="thal-reversible">
+                  <span class="chip-label">Reversible Def.</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Right Column: Results & Explainable AI -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          
+          <!-- Glass Card: Model Prediction Output -->
+          <div class="glass-card risk-panel">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-3.3l-.85-.6C7.8 11.1 7 9.8 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 .8-.8 2.1-2.15 3.1z"/></svg>
+              XGBoost Evaluation
+            </h2>
+            
+            <div class="gauge-container">
+              <svg class="gauge-svg">
+                <circle class="gauge-bg" cx="115" cy="115" r="100"></circle>
+                <circle class="gauge-fill" id="risk-gauge" cx="115" cy="115" r="100"></circle>
+              </svg>
+              <div class="gauge-text-container">
+                <span class="gauge-percentage" id="risk-percent">12%</span>
+                <span class="gauge-label">Cardiac Risk</span>
+              </div>
+            </div>
+
+            <div class="risk-badge" id="risk-badge">Low Risk</div>
+            <p style="text-align: center; max-width: 320px; font-size: 0.85rem;" id="risk-description">
+              Based on the patient's metrics, there is a low probability of coronary artery disease. Continue healthy lifestyle habits.
+            </p>
+          </div>
+
+          <!-- Glass Card: Live Explainable AI (SHAP Contributions) -->
+          <div class="glass-card" style="flex: 1;">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              Clinical Explanations (XAI)
+            </h2>
+            <p class="card-desc">Real-time local explanations showing features driving risk up (+) or pushing risk down (-).</p>
+            
+            <div class="contributions-list" id="xai-list">
+              <!-- Dynamically populated JS -->
+              <div class="contrib-item">
+                <span style="font-size:0.85rem; color:hsl(var(--text-muted)); text-align:center; width:100%;">Calculating contributions...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Glass Card: Personalized Recommendations -->
+          <div class="glass-card recommendations-card" id="recommendations-box" style="display: none;">
+            <h2 class="card-title">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+              Clinical Recommendations
+            </h2>
+            <div class="recs-container" id="recs-container">
+              <!-- Dynamically populated JS -->
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Panel 2: Clinical Data Explorer -->
+      <section class="tab-content explorer-grid" id="panel-explorer" role="tabpanel" aria-labelledby="tab-explorer">
+        
+        <div class="explorer-intro">
+          <h2>Cleveland Patient Cohort Analytics</h2>
+          <p>Explore relationships and statistical trends within the gold-standard UCI dataset (303 patients) used to train our prediction models.</p>
+        </div>
+
+        <!-- Chart Card 1: Age vs Cholesterol -->
+        <div class="glass-card">
+          <h3 class="card-title">Cholesterol Levels by Age</h3>
+          <p class="card-desc">Shows age vs serum cholesterol, segmented by disease presence (target > 50% arterial narrowing).</p>
+          <div class="chart-container">
+            <canvas id="chart-chol"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart Card 2: Chest Pain Type vs Risk -->
+        <div class="glass-card">
+          <h3 class="card-title">Heart Disease Prevalence by Chest Pain Type</h3>
+          <p class="card-desc">Comparison of heart disease occurrence rates across the four clinical chest pain categories.</p>
+          <div class="chart-container">
+            <canvas id="chart-cp"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart Card 3: Thalassemia Risk Distribution -->
+        <div class="glass-card">
+          <h3 class="card-title">Coronary Flow Defects (Thalassemia) vs Disease Rate</h3>
+          <p class="card-desc">The high correlation between genetic blood perfusion defects and actual heart disease diagnosis.</p>
+          <div class="chart-container">
+            <canvas id="chart-thal"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart Card 4: Age vs Max Heart Rate -->
+        <div class="glass-card">
+          <h3 class="card-title">Maximum Exertional Heart Rate vs Age</h3>
+          <p class="card-desc">Max heart rate achieved during physical stress, comparing healthy patients with cardiovascular patients.</p>
+          <div class="chart-container">
+            <canvas id="chart-hr"></canvas>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Panel 3: Technical Metrics & Python Pipeline -->
+      <section class="tab-content grid-performance" id="panel-tech" role="tabpanel" aria-labelledby="tab-tech">
+        
+        <!-- Left Side: Diagnostics and Metrics -->
+        <div class="glass-card">
+          <h2 class="card-title">XGBoost Diagnostic Performance</h2>
+          <p class="card-desc">Live metrics computed by the Python training pipeline on a holdout test set (20% of data).</p>
+          
+          <!-- Key Metrics Badges -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-value" id="metric-accuracy">--</span>
+              <span class="metric-label">Accuracy</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value" id="metric-auc">--</span>
+              <span class="metric-label">ROC-AUC</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value" id="metric-precision">--</span>
+              <span class="metric-label">Precision</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-value" id="metric-recall">--</span>
+              <span class="metric-label">Recall</span>
+            </div>
+          </div>
+
+          <!-- ROC Curve Plot -->
+          <div>
+            <h3 class="card-title" style="font-size: 1.1rem; margin-top: 1rem;">Receiver Operating Characteristic (ROC)</h3>
+            <p class="card-desc">True Positive vs False Positive trade-off. Demonstrates excellent predictive capability.</p>
+            <div style="height: 220px; position: relative;">
+              <canvas id="chart-roc"></canvas>
+            </div>
+          </div>
+
+          <!-- Confusion Matrix Plot -->
+          <div class="confusion-matrix-wrapper">
+            <div style="width: 100%;">
+              <h3 class="card-title" style="font-size: 1.1rem;">Confusion Matrix (UCI Test Set)</h3>
+              <p class="card-desc">Comparison of actual clinical labels vs model predictions.</p>
+            </div>
+            <div class="matrix-grid">
+              <div></div>
+              <div class="matrix-header">Predicted Negative</div>
+              <div class="matrix-header">Predicted Positive</div>
+              
+              <div class="matrix-label">Actual Neg</div>
+              <div class="matrix-cell correct">
+                <span class="matrix-cell-val" id="cm-tn">--</span>
+                <span class="matrix-cell-label">TN (True Neg)</span>
+              </div>
+              <div class="matrix-cell incorrect">
+                <span class="matrix-cell-val" id="cm-fp">--</span>
+                <span class="matrix-cell-label">FP (False Pos)</span>
+              </div>
+              
+              <div class="matrix-label">Actual Pos</div>
+              <div class="matrix-cell incorrect">
+                <span class="matrix-cell-val" id="cm-fn">--</span>
+                <span class="matrix-cell-label">FN (False Neg)</span>
+              </div>
+              <div class="matrix-cell correct">
+                <span class="matrix-cell-val" id="cm-tp">--</span>
+                <span class="matrix-cell-label">TP (True Pos)</span>
+              </div>
+            </div>
+            <span class="matrix-x-axis-title">Model Classification Output</span>
+          </div>
+
+        </div>
+
+        <!-- Right Side: Pipeline Code Viewer -->
+        <div class="glass-card" style="display:flex; flex-direction:column; max-height: 800px;">
+          <h2 class="card-title">XGBoost ML Pipeline</h2>
+          <p class="card-desc">Review the clean, highly documented Python training logic used to create this diagnostic engine.</p>
+          
+          <div class="code-viewer-container" style="flex: 1; min-height: 0;">
+            <div class="code-header">
+              <span class="code-filename">train.py</span>
+              <span style="font-size: 0.75rem; color: hsl(var(--text-muted)); font-weight: 500;">Python 3 + XGBoost</span>
+            </div>
+            <div class="code-pre-wrapper" style="flex: 1;">
+              <pre><code id="code-snippet"># Loading Python pipeline...</code></pre>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid hsla(var(--card-border)); text-align: center; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <p style="font-size: 0.8rem; color: hsl(var(--text-muted));">
+        &copy; 2026 Heart Disease Prediction. Open-source clinical demonstration using Extreme Gradient Boosting (XGBoost).
+      </p>
+      <p style="font-size: 0.8rem; color: hsl(var(--text-muted));">
+        Developed in alignment with the UCI Cleveland Heart Disease Dataset.
+      </p>
+    </footer>
+
+  </div>
+
+  <!-- Load pre-trained/trained model data -->
+  <script src="model_data.js"></script>
+  <!-- Main application scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
